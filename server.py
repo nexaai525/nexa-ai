@@ -167,6 +167,7 @@ def refresh_all_live():
     update_time(); fetch_currency(); fetch_crypto(); fetch_gold(); fetch_all_weather(); fetch_news(); update_time(); LIVE["status"]="live"
     print(f"[LIVE] DONE Dollar {LIVE['dollar_pkr']} BTC ${LIVE['bitcoin_usd']}",flush=True)
 def live_loop():
+    time.sleep(20)
     try: refresh_all_live()
     except: pass
     while True:
