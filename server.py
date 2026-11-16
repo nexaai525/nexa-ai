@@ -8,7 +8,7 @@ import pytz
 
 app = Flask(__name__)
 CORS(app)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6LpedZPMZHVcDpvBPeZh8mr1AO_I1itwzSf5ivgM50ABA")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 PK_TZ = pytz.timezone("Asia/Karachi")
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nexa.db")
 MODELS = ["gemini-3.8-flash", "gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
