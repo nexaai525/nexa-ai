@@ -3,8 +3,10 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import pytz
+
 app = Flask(__name__)
 CORS(app)
+
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 PK_TZ = pytz.timezone("Asia/Karachi")
 
@@ -56,25 +58,19 @@ def chat():
     lang_instr = data.get("langInstruction", "")
     if not GEMINI_API_KEY:
         return jsonify({"reply": "GEMINI_API_KEY WSGI me nahi hai."})
-    # NAYA MODEL - Google ne khud bataya: gemini-3.8-flash
-    for model in ["gemini-3.5-flash", "gemini-3.5-flash", "gemini-3.5-flash"]:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
-            prompt = f"{lang_instr}\nUser: {msg}\nReply short, helpful."
-            r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=30)
-            j = r.json()
-            if "candidates" in j:
-                return jsonify({"reply": j["candidates"][0]["content"]["parts"][0]["text"]})
-            if "error" in j:
-                err = j["error"].get("message", str(j["error"]))
-                low = err.lower()
-                # Agar model purana / band hai to agla model try karo
-                if "not found" in low or "not supported" in low or "no longer available" in low or "not available" in low:
-                    continue
-                return jsonify({"reply": f"Gemini Error: {err[:250]}"})
-        except Exception:
-            continue
-    return jsonify({"reply": "Gemini se connect nahi ho raha. Key check karo."})
+    # SIRF NAYA MODEL - 3.8-flash, purana koi model nahi
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
+        prompt = f"{lang_instr}\nUser: {msg}\nReply short, helpful."
+        r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=30)
+        j = r.json()
+        if "candidates" in j:
+            return jsonify({"reply": j["candidates"][0]["content"]["parts"][0]["text"]})
+        if "error" in j:
+            return jsonify({"reply": f"Gemini Error: {j['error'].get('message','')[:250]}"})
+        return jsonify({"reply": "Gemini se khali jawab aaya."})
+    except Exception as e:
+        return jsonify({"reply": f"Connect Error: {str(e)[:200]}"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
