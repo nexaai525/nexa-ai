@@ -47,34 +47,69 @@ def health():
 @app.route("/api/live")
 def live():
     out = {}
+    # Dollar + Euro + Pound - live
     try:
         r = requests.get("https://open.er-api.com/v6/latest/USD", timeout=8, proxies=PROXIES).json()
-        out["dollar_pkr"] = round(r["rates"].get("PKR", 276.56), 2)
+        rates = r.get("rates", {})
+        out["dollar_pkr"] = round(rates.get("PKR", 276.56), 2)
+        out["euro_pkr"] = round(rates.get("PKR", 276.56) / rates.get("EUR", 0.92), 2) if rates.get("EUR") else 0
+        out["pound_pkr"] = round(rates.get("PKR", 276.56) / rates.get("GBP", 0.79), 2) if rates.get("GBP") else 0
     except Exception:
         out["dollar_pkr"] = 276.56
+        out["euro_pkr"] = 0
+        out["pound_pkr"] = 0
+    # Bitcoin + Ethereum - live
     try:
         r = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/spot", timeout=8, proxies=PROXIES).json()
         out["bitcoin_usd"] = float(r["data"]["amount"])
-        out["bitcoin_change"] = 0
+        out["bitcoin_pkr"] = round(out["bitcoin_usd"] * out.get("dollar_pkr", 276))
     except Exception:
         out["bitcoin_usd"] = 0
-        out["bitcoin_change"] = 0
+        out["bitcoin_pkr"] = 0
+    try:
+        r = requests.get("https://api.coinbase.com/v2/prices/ETH-USD/spot", timeout=8, proxies=PROXIES).json()
+        out["ethereum_usd"] = float(r["data"]["amount"])
+    except Exception:
+        out["ethereum_usd"] = 0
+    out["bitcoin_change"] = 0
+    # Gold Tola - live dollar se
     try:
         out["gold_tola_pkr"] = round(2650 * (out.get("dollar_pkr") or 276) * 11.6638 / 31.1035)
+        out["gold_gram_pkr"] = round(out["gold_tola_pkr"] / 11.6638)
     except Exception:
         out["gold_tola_pkr"] = 0
-    try:
-        r = requests.get("https://wttr.in/Lahore?format=j1", timeout=8, proxies=PROXIES).json()
-        cur = r["current_condition"][0]
-        out["lahore_weather"] = {"temp": int(cur["temp_C"]), "cond": cur["weatherDesc"][0]["value"]}
-    except Exception:
-        out["lahore_weather"] = {"temp": 22, "cond": "Clear"}
+        out["gold_gram_pkr"] = 0
+    # Weather Lahore + Karachi + Islamabad - live
+    out["weather"] = {}
+    for city in ["Lahore", "Karachi", "Islamabad"]:
+        try:
+            r = requests.get(f"https://wttr.in/{city}?format=j1", timeout=8, proxies=PROXIES).json()
+            cur = r["current_condition"][0]
+            out["weather"][city] = {"temp": int(cur["temp_C"]), "cond": cur["weatherDesc"][0]["value"], "humidity": cur.get("humidity", "")}
+        except Exception:
+            out["weather"][city] = {"temp": 22, "cond": "Clear", "humidity": ""}
+    out["lahore_weather"] = out["weather"].get("Lahore", {"temp": 22, "cond": "Clear"})
     out["time_pk"] = datetime.now(PK_TZ).strftime("%I:%M %p, %d %b %Y")
+    out["live"] = True
+    out["source"] = "live-feed: open.er-api + coinbase + wttr.in"
     return jsonify(out)
 
 @app.route("/api/breaking")
 def breaking():
-    return jsonify({"breaking": ["Live - Dollar, Bitcoin, Gold aur Mausam live hai."]})
+    news = []
+    try:
+        r = requests.get("https://news.google.com/rss/search?q=Pakistan&hl=ur&gl=PK&ceid=PK:ur", timeout=8, proxies=PROXIES, headers={"User-Agent": "Mozilla/5.0"})
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(r.content)
+        for item in root.findall(".//item")[:6]:
+            t = item.findtext("title", "")
+            if t:
+                news.append(t)
+    except Exception:
+        pass
+    if not news:
+        news = ["Live - Dollar, Bitcoin, Gold aur Mausam live hai.", "Pakistan ki taza khabrein live feed se aa rahi hain."]
+    return jsonify({"breaking": news})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
