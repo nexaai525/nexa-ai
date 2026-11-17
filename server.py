@@ -57,7 +57,7 @@ def chat():
     if not GEMINI_API_KEY:
         return jsonify({"reply": "GEMINI_API_KEY WSGI me nahi hai."})
     # NAYA MODEL - Google ne khud bataya: gemini-3.8-flash
-    for model in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"]:
+    for model in ["gemini-3.5-flash", "gemini-3.5-flash", "gemini-3.5-flash"]:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
             prompt = f"{lang_instr}\nUser: {msg}\nReply short, helpful."
