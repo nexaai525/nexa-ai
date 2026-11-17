@@ -1,11 +1,7 @@
-# Nexa AI - server.py - PURANA DATA SAFE + NAYA MODEL
-# - nexa.db ko kabhi delete nahi karta, sirf IF NOT EXISTS se table banata hai
-# - Purane users / chats / admin sab safe rehte hain
-# - Sirf gemini-3.8-flash, purana model kahin nahi
 import os
 os.environ["HTTPS_PROXY"] = "http://proxy.server:3128"
 os.environ["HTTP_PROXY"] = "http://proxy.server:3128"
-import os, sqlite3, requests, json
+import sqlite3, requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
@@ -19,20 +15,19 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 ADMIN_EMAIL = "admin@nexa.ai"
 ADMIN_PASS = os.environ.get("ADMIN_PASSWORD", "12345")
 PK_TZ = pytz.timezone("Asia/Karachi")
+PROXIES = {"http": "http://proxy.server:3128", "https": "http://proxy.server:3128"}
 
 def db():
     c = sqlite3.connect(DB)
     c.row_factory = sqlite3.Row
     return c
 
-# PURANA DATA SAFE: IF NOT EXISTS - purani table ko haath nahi lagata
 def init_db():
     c = db()
-    c.execute("""CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, password TEXT, is_admin INTEGER DEFAULT 0, created_at TEXT)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS chats (id INTEGER PRIMARY KEY AUTOINCREMENT, user_email TEXT, title TEXT, created_at TEXT)""")
-    c.execute("""CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, role TEXT, text TEXT, created_at TEXT)""")
+    c.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, password TEXT, is_admin INTEGER DEFAULT 0, created_at TEXT)")
+    c.execute("CREATE TABLE IF NOT EXISTS chats (id INTEGER PRIMARY KEY AUTOINCREMENT, user_email TEXT, title TEXT, created_at TEXT)")
+    c.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, role TEXT, text TEXT, created_at TEXT)")
     c.commit()
-    # Admin sirf agar pehle se nahi hai to banao - purane admin ko overwrite nahi karna
     row = c.execute("SELECT * FROM users WHERE email=?", (ADMIN_EMAIL,)).fetchone()
     if not row:
         c.execute("INSERT INTO users (name,email,password,is_admin,created_at) VALUES (?,?,?,?,?)", ("Admin", ADMIN_EMAIL, ADMIN_PASS, 1, datetime.now(PK_TZ).isoformat()))
@@ -47,99 +42,120 @@ def home():
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status":"live","model":"gemini-3.8-flash","db":"sqlite nexa.db"})
+    return jsonify({"status": "live", "model": "gemini-3.8-flash-fallback", "db": "sqlite nexa.db"})
 
 @app.route("/api/live")
 def live():
-    out={}
+    out = {}
     try:
-        r=requests.get("https://open.er-api.com/v6/latest/USD", timeout=8).json()
-        out["dollar_pkr"]=round(r["rates"].get("PKR",276.56),2)
-    except Exception: out["dollar_pkr"]=276.56
+        r = requests.get("https://open.er-api.com/v6/latest/USD", timeout=8, proxies=PROXIES).json()
+        out["dollar_pkr"] = round(r["rates"].get("PKR", 276.56), 2)
+    except Exception:
+        out["dollar_pkr"] = 276.56
     try:
-        r=requests.get("https://api.coinbase.com/v2/prices/BTC-USD/spot", timeout=8).json()
-        out["bitcoin_usd"]=float(r["data"]["amount"]); out["bitcoin_change"]=0
-    except Exception: out["bitcoin_usd"]=0; out["bitcoin_change"]=0
-    try: out["gold_tola_pkr"]=round(2650*(out.get("dollar_pkr") or 276)*11.6638/31.1035)
-    except Exception: out["gold_tola_pkr"]=0
+        r = requests.get("https://api.coinbase.com/v2/prices/BTC-USD/spot", timeout=8, proxies=PROXIES).json()
+        out["bitcoin_usd"] = float(r["data"]["amount"])
+        out["bitcoin_change"] = 0
+    except Exception:
+        out["bitcoin_usd"] = 0
+        out["bitcoin_change"] = 0
     try:
-        r=requests.get("https://wttr.in/Lahore?format=j1", timeout=8).json()
-        cur=r["current_condition"][0]
-        out["lahore_weather"]={"temp":int(cur["temp_C"]),"cond":cur["weatherDesc"][0]["value"]}
-    except Exception: out["lahore_weather"]={"temp":22,"cond":"Clear"}
-    out["time_pk"]=datetime.now(PK_TZ).strftime("%I:%M %p, %d %b %Y")
+        out["gold_tola_pkr"] = round(2650 * (out.get("dollar_pkr") or 276) * 11.6638 / 31.1035)
+    except Exception:
+        out["gold_tola_pkr"] = 0
+    try:
+        r = requests.get("https://wttr.in/Lahore?format=j1", timeout=8, proxies=PROXIES).json()
+        cur = r["current_condition"][0]
+        out["lahore_weather"] = {"temp": int(cur["temp_C"]), "cond": cur["weatherDesc"][0]["value"]}
+    except Exception:
+        out["lahore_weather"] = {"temp": 22, "cond": "Clear"}
+    out["time_pk"] = datetime.now(PK_TZ).strftime("%I:%M %p, %d %b %Y")
     return jsonify(out)
 
 @app.route("/api/breaking")
 def breaking():
-    return jsonify({"breaking":["Nexa AI Live - Dollar, Bitcoin, Gold aur Mausam live hai."]})
+    return jsonify({"breaking": ["Live - Dollar, Bitcoin, Gold aur Mausam live hai."]})
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
-    d=request.get_json(force=True,silent=True) or {}
-    name=(d.get("name") or "User").strip(); email=(d.get("email") or "").strip().lower(); pw=d.get("password") or ""
-    if email==ADMIN_EMAIL: return jsonify({"ok":False,"error":"Admin email se signup nahi ho sakta."}),400
-    if not email or not pw: return jsonify({"ok":False,"error":"Email aur Password likhein."}),400
-    c=db()
+    d = request.get_json(force=True, silent=True) or {}
+    name = (d.get("name") or "User").strip()
+    email = (d.get("email") or "").strip().lower()
+    pw = d.get("password") or ""
+    if email == ADMIN_EMAIL:
+        return jsonify({"ok": False, "error": "Admin email se signup nahi ho sakta."}), 400
+    if not email or not pw:
+        return jsonify({"ok": False, "error": "Email aur Password likhein."}), 400
+    c = db()
     try:
-        c.execute("INSERT INTO users (name,email,password,is_admin,created_at) VALUES (?,?,?,?,?)",(name,email,pw,0,datetime.now(PK_TZ).isoformat())); c.commit()
+        c.execute("INSERT INTO users (name,email,password,is_admin,created_at) VALUES (?,?,?,?,?)", (name, email, pw, 0, datetime.now(PK_TZ).isoformat()))
+        c.commit()
     except sqlite3.IntegrityError:
-        c.close(); return jsonify({"ok":False,"error":"Ye email pehle se hai, Login karein."}),400
-    c.close(); return jsonify({"ok":True,"user":{"name":name,"email":email,"is_admin":0}})
+        c.close()
+        return jsonify({"ok": False, "error": "Ye email pehle se hai, Login karein."}), 400
+    c.close()
+    return jsonify({"ok": True, "user": {"name": name, "email": email, "is_admin": 0}})
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    d=request.get_json(force=True,silent=True) or {}
-    email=(d.get("email") or "").strip().lower(); pw=d.get("password") or ""
-    c=db(); row=c.execute("SELECT * FROM users WHERE email=? AND password=?",(email,pw)).fetchone(); c.close()
-    if not row: return jsonify({"ok":False,"error":"Email registered nahi hai ya password galat."}),400
-    return jsonify({"ok":True,"user":{"name":row["name"],"email":row["email"],"is_admin":row["is_admin"]}})
+    d = request.get_json(force=True, silent=True) or {}
+    email = (d.get("email") or "").strip().lower()
+    pw = d.get("password") or ""
+    c = db()
+    row = c.execute("SELECT * FROM users WHERE email=? AND password=?", (email, pw)).fetchone()
+    c.close()
+    if not row:
+        return jsonify({"ok": False, "error": "Email registered nahi hai ya password galat."}), 400
+    return jsonify({"ok": True, "user": {"name": row["name"], "email": row["email"], "is_admin": row["is_admin"]}})
 
 @app.route("/api/new-chat", methods=["POST"])
 def new_chat():
-    d=request.get_json(force=True,silent=True) or {}
-    email=(d.get("email") or "guest@nexa.ai")
-    c=db(); cur=c.cursor(); cur.execute("INSERT INTO chats (user_email,title,created_at) VALUES (?,?,?)",(email,"New Chat",datetime.now(PK_TZ).isoformat())); cid=cur.lastrowid; c.commit(); c.close()
-    return jsonify({"ok":True,"chat_id":cid})
+    d = request.get_json(force=True, silent=True) or {}
+    email = d.get("email") or "guest@nexa.ai"
+    c = db()
+    cur = c.cursor()
+    cur.execute("INSERT INTO chats (user_email,title,created_at) VALUES (?,?,?)", (email, "New Chat", datetime.now(PK_TZ).isoformat()))
+    cid = cur.lastrowid
+    c.commit()
+    c.close()
+    return jsonify({"ok": True, "chat_id": cid})
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    d=request.get_json(force=True,silent=True) or {}
-    msg=d.get("message",""); lang=d.get("langInstruction","")
-    # Chat history bhi save karo taake purana data bana rahe
-    try:
-        chat_id=d.get("chat_id")
-        if chat_id:
-            c=db(); c.execute("INSERT INTO messages (chat_id,role,text,created_at) VALUES (?,?,?,?)",(chat_id,"user",msg,datetime.now(PK_TZ).isoformat())); c.commit(); c.close()
-    except Exception: pass
+    d = request.get_json(force=True, silent=True) or {}
+    msg = d.get("message", "")
+    lang = d.get("langInstruction", "")
+    prompt = f"{lang}\nUser: {msg}\nReply short, helpful, Roman Urdu if user uses Roman Urdu."
     if not GEMINI_API_KEY:
-        return jsonify({"reply":"GEMINI_API_KEY PythonAnywhere WSGI / Web > Env me nahi hai."})
-    # SIRF NAYA MODEL - 3.8-flash
-    try:
-        url=f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
-        prompt=f"{lang}\nUser: {msg}\nReply short, helpful, Roman Urdu if user uses Roman Urdu."
-        r=requests.post(url, json={"contents":[{"parts":[{"text":prompt}]}]}, timeout=30, proxies={"http":"http://proxy.server:3128","https":"http://proxy.server:3128"})
-        r=requests.post(url, json={"contents":[{"parts":[{"text":prompt}]}]}, timeout=30)
-        j=r.json()
-        if "candidates" in j:
-            txt=j["candidates"][0]["content"]["parts"][0]["text"]
-            try:
-                if chat_id:
-                    c=db(); c.execute("INSERT INTO messages (chat_id,role,text,created_at) VALUES (?,?,?,?)",(chat_id,"ai",txt,datetime.now(PK_TZ).isoformat())); c.commit(); c.close()
-            except Exception: pass
-            return jsonify({"reply":txt})
-        if "error" in j:
-            return jsonify({"reply":f"Gemini Error: {j['error'].get('message','')[:250]}"})
-        return jsonify({"reply":"Gemini se khali jawab aaya."})
-    except Exception as e:
-        return jsonify({"reply":f"Connect Error: {str(e)[:200]}"})
+        return jsonify({"reply": "GEMINI_API_KEY PythonAnywhere Web Env me nahi hai."})
+    MODELS_TRY = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3-flash-preview"]
+    last_err = ""
+    for MODEL_NAME in MODELS_TRY:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={GEMINI_API_KEY}"
+            r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=30, proxies=PROXIES)
+            j = r.json()
+            if "candidates" in j:
+                return jsonify({"reply": j["candidates"][0]["content"]["parts"][0]["text"]})
+            if "error" in j:
+                last_err = j["error"].get("message", "")
+                if "high demand" in last_err or "overloaded" in last_err or "503" in last_err or "429" in last_err:
+                    continue
+                return jsonify({"reply": f"Gemini Error: {last_err[:250]}"})
+        except Exception as e:
+            last_err = str(e)
+            continue
+    return jsonify({"reply": f"Gemini busy hai, 1 minute baad phir try karein. ({last_err[:120]})"})
 
 @app.route("/api/admin/users")
 def admin_users():
-    email=request.args.get("admin_email","")
-    if email!=ADMIN_EMAIL: return jsonify({"ok":False,"error":"Sirf Admin"}),403
-    c=db(); rows=c.execute("SELECT id,name,email,is_admin,created_at FROM users ORDER BY id DESC").fetchall(); c.close()
-    return jsonify({"ok":True,"users":[dict(r) for r in rows]})
+    email = request.args.get("admin_email", "")
+    if email != ADMIN_EMAIL:
+        return jsonify({"ok": False, "error": "Sirf Admin"}), 403
+    c = db()
+    rows = c.execute("SELECT id,name,email,is_admin,created_at FROM users ORDER BY id DESC").fetchall()
+    c.close()
+    return jsonify({"ok": True, "users": [dict(r) for r in rows]})
 
-if __name__=="__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)))
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
