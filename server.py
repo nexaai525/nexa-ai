@@ -128,7 +128,7 @@ def chat():
     prompt = f"{lang}\nUser: {msg}\nReply short, helpful, Roman Urdu if user uses Roman Urdu."
     if not GEMINI_API_KEY:
         return jsonify({"reply": "GEMINI_API_KEY PythonAnywhere Web Env me nahi hai."})
-    MODELS_TRY = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3-flash-preview"]
+    MODELS_TRY = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-3-flash-preview", "gemini-3.8-flash"]
     last_err = ""
     for MODEL_NAME in MODELS_TRY:
         try:
@@ -139,13 +139,18 @@ def chat():
                 return jsonify({"reply": j["candidates"][0]["content"]["parts"][0]["text"]})
             if "error" in j:
                 last_err = j["error"].get("message", "")
-                if "high demand" in last_err or "overloaded" in last_err or "503" in last_err or "429" in last_err:
+                low = last_err.lower()
+                # Koi bhi busy / quota / overload error ho to agle model pe jao, ruko mat
+                if any(k in low for k in ["high demand", "overloaded", "currently experiencing", "try again later", "resource exhausted", "quota", "503", "429", "temporarily", "unavailable"]):
                     continue
-                return jsonify({"reply": f"Gemini Error: {last_err[:250]}"})
+                # Agar model hi nahi mila to bhi agla try karo
+                if "not found" in low or "not supported" in low or "404" in low:
+                    continue
+                continue
         except Exception as e:
             last_err = str(e)
             continue
-    return jsonify({"reply": f"Gemini busy hai, 1 minute baad phir try karein. ({last_err[:120]})"})
+    return jsonify({"reply": "Bhai Gemini abhi thora busy hai, 1 minute baad phir try karo - main ne 6 model try kiye hain."})
 
 @app.route("/api/admin/users")
 def admin_users():
