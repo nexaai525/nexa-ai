@@ -57,7 +57,7 @@ def chat():
     if not GEMINI_API_KEY:
         return jsonify({"reply": "GEMINI_API_KEY WSGI me nahi hai. PythonAnywhere > Web > WSGI file kholo, wahan GEMINI_API_KEY check karo."})
     # Try models in order - 1.5-flash sab se stable hai
-    for model in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro"]:
+    for model in ["gemini-3.8-flash", "gemini-3.8-flash", "gemini-pro"]:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
             prompt = f"{lang_instr}\nUser: {msg}\nReply short, helpful."
