@@ -2,6 +2,9 @@
 # - nexa.db ko kabhi delete nahi karta, sirf IF NOT EXISTS se table banata hai
 # - Purane users / chats / admin sab safe rehte hain
 # - Sirf gemini-3.8-flash, purana model kahin nahi
+import os
+os.environ["HTTPS_PROXY"] = "http://proxy.server:3128"
+os.environ["HTTP_PROXY"] = "http://proxy.server:3128"
 import os, sqlite3, requests, json
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -115,6 +118,7 @@ def chat():
     try:
         url=f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
         prompt=f"{lang}\nUser: {msg}\nReply short, helpful, Roman Urdu if user uses Roman Urdu."
+        r=requests.post(url, json={"contents":[{"parts":[{"text":prompt}]}]}, timeout=30, proxies={"http":"http://proxy.server:3128","https":"http://proxy.server:3128"})
         r=requests.post(url, json={"contents":[{"parts":[{"text":prompt}]}]}, timeout=30)
         j=r.json()
         if "candidates" in j:
