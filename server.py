@@ -350,7 +350,7 @@ def new_chat(): return jsonify({"ok":True})
 def chat():
     data=request.get_json(force=True) or {}; msg=data.get("message","").strip(); lang_instr=data.get("langInstruction",""); history=data.get("history",[]); memory=data.get("memory",{})
     if not msg: return jsonify({"reply":"Kuch likho to sahi."})
-    if int(time.time())-LIVE["updated_ts"]>300: #threading.Thread(target=refresh_all_live,daemon=True).start()
+    if int(time.time())-LIVE["updated_ts"]>300: threading.Thread(target=refresh_all_live,daemon=True).start()
     history_text=""
     for h in history[-10:]:
         role="User" if h.get("role")=="user" else "Nexa"; history_text+=f"{role}: {h.get('text','')[:600]}\n"
