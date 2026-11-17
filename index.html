@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【entity-Nexa¦canonical_name=Nexa】 AI — Full</title>
+<title>N&#101;xa AI — Full</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0B0B10;--panel:#12151B;--card:#1A1E26;--border:#232935;--text:#F2F4F7;--muted:#9AA3B2;--brand:#7C5CFF;--brand2:#00D4FF}
+:root{--bg:#0B0B10;--panel:#12151B;--card:#1A1E26;--border:#232935;--text:#F2F4F7;--muted:#9AA3B2;--brand:#7C5CFF}
 body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;overflow:hidden}
 .sidebar{width:270px;min-width:270px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:18px}
 .logo{display:flex;align-items:center;gap:11px;margin-bottom:16px}
@@ -18,8 +18,6 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--tex
 .user-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
 .user-row{display:flex;gap:10px;align-items:center}
 .avatar{width:38px;height:38px;border-radius:50%;background:#2E7DFF;display:flex;align-items:center;justify-content:center;font-weight:800}
-.user-row b{font-size:13px}
-.user-row small{font-size:11px;color:var(--muted)}
 .stats{display:flex;gap:8px;margin-top:10px}
 .stat{flex:1;background:#12151B;border-radius:8px;padding:8px;text-align:center}
 .stat b{display:block}
@@ -29,7 +27,6 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--tex
 .side-btn.active{background:#3A2A00;border-color:#FF8A00;color:#FFB84D}
 .mini-row{display:flex;gap:8px;margin-top:8px}
 .mini-row button{flex:1;padding:7px;border-radius:20px;border:1px solid var(--border);background:#1A1E26;color:#ccc;cursor:pointer;font-size:12px}
-.mini-row button.active{background:#333;color:#fff}
 .hist{margin-top:16px;flex:1;overflow:auto}
 .hist h4{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
 .hist-item{padding:10px;border-radius:8px;background:var(--card);font-size:13px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
@@ -49,10 +46,6 @@ select,.topbar input{background:#1A1E26;border:1px solid var(--border);color:#ff
 .a-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:#FFB84D;font-weight:700}
 .actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .actions button{padding:6px 11px;border-radius:20px;border:1px solid var(--border);background:#222;color:#ddd;cursor:pointer;font-size:12px}
-.live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
-.live-card{background:#12151B;border:1px solid var(--border);padding:12px;border-radius:10px}
-.live-card small{color:var(--muted)}
-.live-card b{font-size:18px;display:block;margin-top:4px}
 .input-area{padding:14px 18px;border-top:1px solid var(--border)}
 .input-box{max-width:900px;margin:0 auto;display:flex;gap:8px;background:#1A1E26;border:1px solid var(--border);border-radius:30px;padding:6px 6px 6px 14px;align-items:center}
 .input-box input{flex:1;background:transparent;border:0;outline:none;color:#fff;font-size:15px}
@@ -70,10 +63,10 @@ select,.topbar input{background:#1A1E26;border:1px solid var(--border);color:#ff
 </head>
 <body>
 <div class="sidebar">
-  <div class="logo"><div class="logo-icon">✦</div><div><h1>【entity-Nexa¦canonical_name=Nexa】 <span>AI</span></h1><p>PROFESSIONAL ASSISTANT</p></div></div>
+  <div class="logo"><div class="logo-icon">✦</div><div><h1>N&#101;xa <span>AI</span></h1><p>PROFESSIONAL ASSISTANT</p></div></div>
   <button class="new-btn" onclick="newChat()">+ New Chat</button>
   <div class="user-card">
-    <div class="user-row"><div class="avatar" id="avatar">A</div><div><b id="userName">Guest</b><br><small id="userEmail">guest@【entity-nexa¦canonical_name=Nexa】.ai</small></div></div>
+    <div class="user-row"><div class="avatar" id="avatar">A</div><div><b id="userName">Guest</b><br><small id="userEmail">guest@nexa.ai</small></div></div>
     <div class="stats"><div class="stat"><b id="cChats">0</b><span>Chats</span></div><div class="stat"><b id="cMsgs">0</b><span>Messages</span></div><div class="stat"><b id="cImgs">0</b><span>Images</span></div></div>
     <div class="session">● Session Active &nbsp; <span id="sessTime">0s</span></div>
     <button class="side-btn active" onclick="newChat()">🔥 New Chat</button>
@@ -81,13 +74,12 @@ select,.topbar input{background:#1A1E26;border:1px solid var(--border);color:#ff
     <div class="mini-row"><button onclick="openAdmin()">Admin</button><button onclick="logout()">Logout</button></div>
   </div>
   <div class="hist"><h4>CHAT HISTORY</h4><div id="history"></div></div>
-  <div style="font-size:11px;color:#777">【entity-Nexa¦canonical_name=Nexa】 AI v3.0 • 3.8 Flash &nbsp; ● Online</div>
+  <div style="font-size:11px;color:#777">N&#101;xa AI v3.0 • 3.8 Flash &nbsp; ● Online</div>
 </div>
-
 <div class="main">
   <div class="topbar">
     <h2>Dashboard</h2>
-    <select id="modelSel"><option>【entity-Nexa¦canonical_name=Nexa】 3.8 Flash</option></select>
+    <select id="modelSel"><option>N&#101;xa 3.8 Flash</option></select>
     <input id="newsInput" placeholder="Ya seedha likhein: Pakistan ki khabar" onkeydown="if(event.key==='Enter') askNews()">
     <button class="pill active" onclick="newChat()">🔥 New Chat</button>
     <button class="pill" onclick="setMode('text',this)">Text</button>
@@ -106,7 +98,6 @@ select,.topbar input{background:#1A1E26;border:1px solid var(--border);color:#ff
     <div class="hint">Voice • Voice Reply • Text • Text Reply • Enter to Send &nbsp;&nbsp; Live • News • Knowledge</div>
   </div>
 </div>
-
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <h2 id="loginTitle">Login</h2>
@@ -119,14 +110,12 @@ select,.topbar input{background:#1A1E26;border:1px solid var(--border);color:#ff
     <div style="font-size:11px;color:#888;margin-top:8px">Admin: admin@nexa.ai / 12345</div>
   </div>
 </div>
-
 <script>
 let chats = JSON.parse(localStorage.getItem('nexa_chats')||'[]');
 let cur = null;
 let isSignup = false;
 let startTime = Date.now();
 setInterval(()=>{ document.getElementById('sessTime').textContent = Math.floor((Date.now()-startTime)/1000)+'s'; },1000);
-
 function saveChats(){ localStorage.setItem('nexa_chats', JSON.stringify(chats)); renderHistory(); }
 function renderHistory(){
   const h = document.getElementById('history'); h.innerHTML='';
@@ -150,7 +139,7 @@ function renderChat(){
       box.lastElementChild.querySelector('.u-bubble').textContent=m.text;
     } else {
       const div=document.createElement('div'); div.className='msg';
-      div.innerHTML=`<div class="a-bubble"><div class="a-head">✦ Nexa AI</div><div class="a-text"></div><div class="actions"><button onclick="copyText(this)">Copy</button><button onclick="speakText(this)">Listen</button><button>Pause</button><button>Resume</button><button>Stop</button></div></div>`;
+      div.innerHTML=`<div class="a-bubble"><div class="a-head">✦ N&#101;xa AI</div><div class="a-text"></div><div class="actions"><button onclick="copyText(this)">Copy</button><button onclick="speakText(this)">Listen</button><button>Pause</button><button>Resume</button><button>Stop</button></div></div>`;
       div.querySelector('.a-text').textContent=m.text; box.appendChild(div);
     }
   });
