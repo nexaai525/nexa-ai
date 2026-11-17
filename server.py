@@ -55,9 +55,9 @@ def chat():
     msg = data.get("message", "")
     lang_instr = data.get("langInstruction", "")
     if not GEMINI_API_KEY:
-        return jsonify({"reply": "GEMINI_API_KEY WSGI me nahi hai. PythonAnywhere > Web > WSGI file kholo, wahan GEMINI_API_KEY check karo."})
-    # Try models in order - 1.5-flash sab se stable hai
-    for model in ["gemini-3.8-flash", "gemini-3.8-flash", "gemini-pro"]:
+        return jsonify({"reply": "GEMINI_API_KEY WSGI me nahi hai."})
+    # NAYA MODEL - Google ne khud bataya: gemini-3.8-flash
+    for model in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"]:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
             prompt = f"{lang_instr}\nUser: {msg}\nReply short, helpful."
@@ -65,16 +65,16 @@ def chat():
             j = r.json()
             if "candidates" in j:
                 return jsonify({"reply": j["candidates"][0]["content"]["parts"][0]["text"]})
-            # Agar candidates nahi, to error ko aage bhejo taake pata chale
             if "error" in j:
                 err = j["error"].get("message", str(j["error"]))
-                # Agar model nahi mila to agla model try karo
-                if "not found" in err.lower() or "not supported" in err.lower():
+                low = err.lower()
+                # Agar model purana / band hai to agla model try karo
+                if "not found" in low or "not supported" in low or "no longer available" in low or "not available" in low:
                     continue
                 return jsonify({"reply": f"Gemini Error: {err[:250]}"})
-        except Exception as e:
+        except Exception:
             continue
-    return jsonify({"reply": "Gemini se connect nahi ho raha. Key check karo - Google AI Studio se nayi Key bana ke WSGI me dalo."})
+    return jsonify({"reply": "Gemini se connect nahi ho raha. Key check karo."})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
